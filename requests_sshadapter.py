@@ -12,7 +12,7 @@ import urlparse
 from requests.packages.urllib3 import connectionpool
 
 
-class SSHTunnelConnection(httplib.HTTPConnection):
+class SSHTunnelHTTPConnection(httplib.HTTPConnection):
     def __init__(
             self, host, ssh_user, ssh_host, ssh_port, host_address, host_port):
         self.ssh_user = ssh_user
@@ -37,7 +37,7 @@ class SSHTunnelConnection(httplib.HTTPConnection):
         self.tunnel.close()
 
 
-class SSHTunnelConnectionPool(connectionpool.HTTPConnectionPool):
+class SSHTunnelHTTPConnectionPool(connectionpool.HTTPConnectionPool):
     def __init__(self, ssh_user, ssh_host, ssh_port, host_address, host_port):
         self.ssh_user = ssh_user
         self.ssh_host = ssh_host
@@ -47,14 +47,14 @@ class SSHTunnelConnectionPool(connectionpool.HTTPConnectionPool):
         connectionpool.HTTPConnectionPool.__init__(self, 'localhost')
 
     def _new_conn(self):
-        return SSHTunnelConnection(
+        return SSHTunnelHTTPConnection(
             self.host, self.ssh_user, self.ssh_host, self.ssh_port,
             self.host_address, self.host_port)
 
 
-class SSHTunnelAdapter(requests.adapters.HTTPAdapter):
+class SSHTunnelHTTPAdapter(requests.adapters.HTTPAdapter):
     def __init__(self, ssh_user, ssh_host, ssh_port=22):
-        super(SSHTunnelAdapter, self).__init__()
+        super(SSHTunnelHTTPAdapter, self).__init__()
         self.ssh_user = ssh_user
         self.ssh_host = ssh_host
         self.ssh_port = ssh_port
@@ -67,7 +67,7 @@ class SSHTunnelAdapter(requests.adapters.HTTPAdapter):
         else:
             remote_host = components.netloc
             remote_port = 80
-        return SSHTunnelConnectionPool(
+        return SSHTunnelHTTPConnectionPool(
             self.ssh_user, self.ssh_host, self.ssh_port,
             remote_host, remote_port)
 
@@ -82,7 +82,7 @@ def main():
     parser.add_argument('url', help="URL (as seen from the remote host)")
     args = parser.parse_args()
 
-    ssh_adapter = SSHTunnelAdapter(ssh_user=args.user, ssh_host=args.host)
+    ssh_adapter = SSHTunnelHTTPAdapter(ssh_user=args.user, ssh_host=args.host)
     session = requests.Session()
     session.mount('http://', ssh_adapter)
     r = session.get(args.url)
