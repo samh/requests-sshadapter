@@ -5,7 +5,10 @@ using it to forward HTTP connections.
 Modeled roughly on the UnixAdapter from docker-py
 (https://github.com/dotcloud/docker-py/blob/master/docker/unixconn/unixconn.py)
 """
-import httplib
+try:
+    import http.client as httplib
+except ImportError:
+    import httplib
 import bgtunnel
 import requests.adapters
 import urlparse
